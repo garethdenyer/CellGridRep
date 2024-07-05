@@ -53,4 +53,19 @@ public class ManageLogin : MonoBehaviour
             nameInput.placeholder.GetComponent<Text>().text = "Must provide some info";
         }
     }
+
+    public void ChemotaxisLogin(string LessonInput)
+    {
+        if (nameInput.text.Length > 0)
+        {
+            Username = nameInput.text;
+            Lesson = LessonInput;
+            SceneManager.LoadScene("Chemotaxis");
+        }
+
+        else
+        {
+            nameInput.placeholder.GetComponent<Text>().text = "Must provide some info";
+        }
+    }
 }
