@@ -16,41 +16,87 @@ public class ChemotaxisManager : MonoBehaviour
     public GameObject cellPrefab;
     public GameObject centralWell;
 
+    public float spawnRadius = 0.4f; // Radius within which to spawn cells
+
     public List<GameObject> cells = new List<GameObject>();
 
-    public GameObject rightWell;
+    public List<GameObject> chemwells = new List<GameObject>();
 
-    ChemotaxisWell rightwellscript;
     public int cellsPerFrame = 20; // Number of cells to move per frame
 
     public Slider basicspeed;
-    
+
+    public Button spawnSampleButton;
+    public Button clearCellsButton;
+    public Button startMoveButton;
+
+    public List<string> chemoattractants = new List<string>();
+    public TMP_Dropdown rightWellDPDN;
+    public TMP_Dropdown leftWellDPDN;
+
+    private Coroutine moveCellsCoroutine;
+
 
     private void Start()
     {
-        rightwellscript = rightWell.GetComponent<ChemotaxisWell>();
+        spawnSampleButton.onClick.AddListener(StartPopulatingWell);
+        clearCellsButton.onClick.AddListener(ClearCells);
+        spawnSampleButton.interactable = true;
+        clearCellsButton.interactable = false;
+        startMoveButton.interactable = false;
+
+        chemoattractants = new List<string>() { "Diluent", "A", "B", "C", "D", "E" };
+        rightWellDPDN.AddOptions(chemoattractants);
+        leftWellDPDN.AddOptions(chemoattractants);
+    }
+
+    public void SetChemoattractant (string dpdnname)
+    {
+        if(dpdnname == "right")  
+        {
+            chemwells[0].GetComponent<ChemotaxisWell>().chemicalIndex = rightWellDPDN.value;
+        }
+        else
+        {
+            chemwells[1].GetComponent<ChemotaxisWell>().chemicalIndex = leftWellDPDN.value;
+        }
     }
 
 
     public void StartPopulatingWell()
     {
         spread++;
+        ClearCells();
+        spawnSampleButton.interactable = false;
+        clearCellsButton.interactable = true;
 
-        //get rid of all cells, clear cells list and wipe cellinGrid
-        foreach (GameObject celltokill in cells)
-        {
-            Destroy(celltokill);
-        }
-        cells.Clear();
-
-        //decide on cellNumber
         int cellNumber = Random.Range(1500, 2000);
-
 
         if (!IsPopulatingWell)
         {
             StartCoroutine(PopulateWell(cellNumber));
         }
+    }
+
+    public void ClearCells()
+    {
+        if (moveCellsCoroutine != null)
+        {
+            StopCoroutine(moveCellsCoroutine);
+            moveCellsCoroutine = null;
+        }
+
+        foreach (GameObject cell in cells)
+        {
+            Destroy(cell);
+        }
+        cells.Clear();
+
+        spawnSampleButton.interactable = true;
+        clearCellsButton.interactable = false;
+
+        this.GetComponent<MainTimer>().ResetTimer();
+        startMoveButton.interactable = false;
     }
 
     IEnumerator PopulateWell(int cellstospawn)
@@ -63,22 +109,34 @@ public class ChemotaxisManager : MonoBehaviour
         for (int i = 0; i < cellstospawn; i++)
         {
             float y = 0.05f; //depth in well
-            Vector3 startingposition = new Vector3(Random.Range(-gridx, gridx),  y, Random.Range(-gridz, gridz)); //position within a square
+            Vector3 startingposition = new Vector3(Random.Range(-gridx, gridx), y, Random.Range(-gridz, gridz)); //position within a square
             //check within radius
             float radius = Mathf.Sqrt((startingposition.x * startingposition.x) + (startingposition.z * startingposition.z));
 
             if (radius < 0.4f)
             {
                 GameObject cell = Instantiate(cellPrefab);
-                cell.transform.SetParent(centralWell.transform);           
-                cell.transform.localPosition = startingposition;
-                
-                //decide on cell mobility
-                float mob = MakeRandFromNormal(0.2f); //the range is 0-1, so the std dev is set at 0.2
-                cell.GetComponent<ChemotaxisCell>().mobility = mob;
-
-                cells.Add(cell);  // This is where you add the instantiated cell to your list
                 cell.transform.name = "C" + cells.Count.ToString();
+                cell.transform.SetParent(centralWell.transform);
+                cell.transform.localPosition = startingposition;
+
+                //generate a cell type in proportion to what is desired.
+                //in this case, there is an 80% chance of getting G, the type that loves Chemoattractant A
+                //and a 20% chance of getting type F that are a bit indifferent
+                float choicefactor = Random.Range(0f, 100f);
+                if (choicefactor > 20f)
+                {
+                    cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                }
+                else
+                {
+                    cell.GetComponent<ChemotaxisCell>().cellType = 'F';
+                }
+          
+                cell.GetComponent<ChemotaxisCell>().SetChemoattractantAffinities();
+
+                cells.Add(cell);
+
             }
 
             // Yield every N iterations to avoid blocking the frame for too long
@@ -90,27 +148,24 @@ public class ChemotaxisManager : MonoBehaviour
 
         //end of coroutine
         IsPopulatingWell = false;
-    }
 
-    public float MakeRandFromNormal(float stdDev)
-    {
-        float result; //value to return
-        float mean = 0.5f;
-        //now for the black magic
-        float u1 = Random.Range(0.0f, 1.0f);
-        float u2 = Random.Range(0.0f, 1.0f);
-        float randStdNormal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
-        result = mean + stdDev * randStdNormal;
-        if (result < 0.02f) //if the random value was in bottom 2%, make it a negative so we have some cells that go backwards
-        {
-            result *= -1f;
-        }
-        return result;
+        startMoveButton.interactable = true;
     }
 
     public void BeginCellMovement()
     {
-        StartCoroutine(MoveCells());
+        //first check that the cooroutine isn't already going...
+        if (moveCellsCoroutine != null)
+        {
+            StopCoroutine(moveCellsCoroutine);
+        }
+        
+        //start the coroutine and keep a referncec to it
+        moveCellsCoroutine = StartCoroutine(MoveCells());
+
+        Debug.Log("Move Cells started on " + cells.Count.ToString() + " cells");
+        this.GetComponent<MainTimer>().timerIsRunning = true;
+        startMoveButton.interactable = false;
     }
 
     private IEnumerator MoveCells()
@@ -120,6 +175,7 @@ public class ChemotaxisManager : MonoBehaviour
             // Move a subset of cells each frame
             for (int i = 0; i < cells.Count; i += cellsPerFrame)
             {
+                
                 for (int j = 0; j < cellsPerFrame && (i + j) < cells.Count; j++)
                 {
                     MoveCell(cells[i + j]);
@@ -131,13 +187,41 @@ public class ChemotaxisManager : MonoBehaviour
 
     private void MoveCell(GameObject cell)
     {
-        float basespeed = basicspeed.value;
+        float basespeed = this.GetComponent<MainTimer>().timedistort/100f;  //take the timedistort and tweak with a magic number
+
         ChemotaxisCell cellScript = cell.GetComponent<ChemotaxisCell>();
-        if (cellScript != null && rightwellscript != null)
+
+        // Check if cellScript is not null and has affinities
+        if (cellScript != null && cellScript.chemoattractantAffinities != null && cellScript.chemoattractantAffinities.Count > 0)
         {
-            float speed = cellScript.mobility * rightwellscript.attractiveness * basespeed;
-            cell.transform.position = Vector3.MoveTowards(cell.transform.position, rightWell.transform.position, speed * Time.deltaTime);
+            for (int w = 0; w < chemwells.Count; w++)
+            {
+                ChemotaxisWell wellScript = chemwells[w].GetComponent<ChemotaxisWell>();
+                if (wellScript != null)
+                {
+                    int chemindex = wellScript.chemicalIndex;
+
+                    // Check if chemindex is within the bounds of chemoattractantAffinities list
+                    if (chemindex >= 0 && chemindex < cellScript.chemoattractantAffinities.Count)
+                    {
+                        float speed = cellScript.GetAffinityToChemoattractant(chemindex) * basespeed;
+                        //Debug.Log($"Cell: {cell.name}, Well: {chemwells[w].name}, ChemIndex: {chemindex}, Speed: {speed}");
+
+                        if (speed > 0)
+                        {
+                            cell.transform.position = Vector3.MoveTowards(cell.transform.position, chemwells[w].transform.position, speed * Time.deltaTime);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Invalid chemindex: {chemindex} for cell: {cell.name}");
+                    }
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"CellScript is null or affinities are not properly set for cell: {cell.name}");
         }
     }
-
 }

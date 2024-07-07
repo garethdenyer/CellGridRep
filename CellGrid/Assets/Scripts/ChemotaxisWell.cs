@@ -6,6 +6,6 @@ public class ChemotaxisWell : MonoBehaviour
 {
     // Attached to Chemotaxis Well
 
-    public float attractiveness;
+    public int chemicalIndex;
 
 }
