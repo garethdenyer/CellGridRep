@@ -34,6 +34,8 @@ public class ChemotaxisManager : MonoBehaviour
     public TMP_Dropdown rightWellDPDN;
     public TMP_Dropdown leftWellDPDN;
 
+    public TMP_Dropdown sampleDPDN;
+
     private Coroutine moveCellsCoroutine;
 
 
@@ -94,6 +96,9 @@ public class ChemotaxisManager : MonoBehaviour
 
         spawnSampleButton.interactable = true;
         clearCellsButton.interactable = false;
+        sampleDPDN.interactable = true;
+        rightWellDPDN.interactable = true;
+        leftWellDPDN.interactable = true;
 
         this.GetComponent<MainTimer>().ResetTimer();
         startMoveButton.interactable = false;
@@ -150,6 +155,7 @@ public class ChemotaxisManager : MonoBehaviour
         IsPopulatingWell = false;
 
         startMoveButton.interactable = true;
+        sampleDPDN.interactable = false;
     }
 
     public void BeginCellMovement()
@@ -166,6 +172,8 @@ public class ChemotaxisManager : MonoBehaviour
         Debug.Log("Move Cells started on " + cells.Count.ToString() + " cells");
         this.GetComponent<MainTimer>().timerIsRunning = true;
         startMoveButton.interactable = false;
+        rightWellDPDN.interactable = false;
+        leftWellDPDN.interactable = false;
     }
 
     private IEnumerator MoveCells()
