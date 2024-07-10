@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.UI;
@@ -34,6 +35,7 @@ public class ChemotaxisManager : MonoBehaviour
     public TMP_Dropdown rightWellDPDN;
     public TMP_Dropdown leftWellDPDN;
 
+    public List<string> samples = new List<string>();
     public TMP_Dropdown sampleDPDN;
 
     private Coroutine moveCellsCoroutine;
@@ -47,9 +49,12 @@ public class ChemotaxisManager : MonoBehaviour
         clearCellsButton.interactable = false;
         startMoveButton.interactable = false;
 
-        chemoattractants = new List<string>() { "Diluent", "A", "B", "C", "D", "E" };
+        chemoattractants = new List<string>() { "Diluent", "fMLP", "PMA", "LPS", "C5a", "LTB4" };
         rightWellDPDN.AddOptions(chemoattractants);
         leftWellDPDN.AddOptions(chemoattractants);
+
+        samples = new List<string>() {"Control", "Patient A", "Patient B", "Patient C" };
+        sampleDPDN.AddOptions(samples);
     }
 
     public void SetChemoattractant (string dpdnname)
@@ -125,15 +130,32 @@ public class ChemotaxisManager : MonoBehaviour
                 cell.transform.SetParent(centralWell.transform);
                 cell.transform.localPosition = startingposition;
 
+
+
                 //generate a cell type in proportion to what is desired.
-                //in this case, there is an 80% chance of getting G, the type that loves Chemoattractant A
-                //and a 20% chance of getting type F that are a bit indifferent
                 float choicefactor = Random.Range(0f, 100f);
-                if (choicefactor > 20f)
+                if (choicefactor > 10f)  //90% will be G, H, I, or J
                 {
-                    cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                    switch (sampleDPDN.value)
+                    {
+                        case 0:
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                            break;
+                        case 1:
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'H';
+                            break;
+                        case 2:
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'I';
+                            break;
+                        case 3:
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'J';
+                            break;
+                        default:
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                            break;                           
+                    }                   
                 }
-                else
+                else //10% will be F
                 {
                     cell.GetComponent<ChemotaxisCell>().cellType = 'F';
                 }
