@@ -16,7 +16,7 @@ public class ColorAdjustment : MonoBehaviour
 
     private void Start()
     {
-        exposureSld.value = -2.6f;
+        exposureSld.value = 0.5f;
         ExposureCtrl();
     }
 

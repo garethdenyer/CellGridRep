@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraChemotaxis : MonoBehaviour
 {
-    float scanSpeed = 0.2f;
+    float scanSpeed = 0.1f;
     float zoomSpeed = 1f;
 
     float minZ = -30f; // Farthest point

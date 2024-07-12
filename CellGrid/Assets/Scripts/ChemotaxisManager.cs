@@ -1,10 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Analytics;
 using UnityEngine.UI;
 
 
@@ -49,17 +46,17 @@ public class ChemotaxisManager : MonoBehaviour
         clearCellsButton.interactable = false;
         startMoveButton.interactable = false;
 
-        chemoattractants = new List<string>() { "Diluent", "fMLP", "PMA", "LPS", "C5a", "LTB4" };
+        chemoattractants = new List<string>() { "Diluent", "fMLP", "PMA", "LPS", "C5a", "LTB<sub>4</sub>" };
         rightWellDPDN.AddOptions(chemoattractants);
         leftWellDPDN.AddOptions(chemoattractants);
 
-        samples = new List<string>() {"Control", "Patient A", "Patient B", "Patient C" };
+        samples = new List<string>() { "Control", "Patient A", "Patient B", "Patient C" };
         sampleDPDN.AddOptions(samples);
     }
 
-    public void SetChemoattractant (string dpdnname)
+    public void SetChemoattractant(string dpdnname)
     {
-        if(dpdnname == "right")  
+        if (dpdnname == "right")
         {
             chemwells[0].GetComponent<ChemotaxisWell>().chemicalIndex = rightWellDPDN.value;
         }
@@ -69,6 +66,20 @@ public class ChemotaxisManager : MonoBehaviour
         }
     }
 
+    public void ToggleWellQuads()
+    {
+
+        Renderer quadrenderer = centralWell.GetComponentInChildren<Renderer>();
+        if (quadrenderer.enabled)
+        {
+            quadrenderer.enabled = false;
+        }
+        else
+        {
+            quadrenderer.enabled = true;
+        }
+
+    }
 
     public void StartPopulatingWell()
     {
@@ -77,7 +88,7 @@ public class ChemotaxisManager : MonoBehaviour
         spawnSampleButton.interactable = false;
         clearCellsButton.interactable = true;
 
-        int cellNumber = Random.Range(1500, 2000);
+        int cellNumber = Random.Range(2500, 3000);
 
         if (!IsPopulatingWell)
         {
@@ -116,6 +127,13 @@ public class ChemotaxisManager : MonoBehaviour
         float gridx = 0.4f;
         float gridz = 0.4f;
 
+        //make a list for totting up the cell type totals and populate with five zeros
+        List<int> typetotals = new List<int>();
+        for (int c = 0; c < 5; c++)
+        {
+            typetotals.Add(0);
+        }
+
         for (int i = 0; i < cellstospawn; i++)
         {
             float y = 0.05f; //depth in well
@@ -130,40 +148,48 @@ public class ChemotaxisManager : MonoBehaviour
                 cell.transform.SetParent(centralWell.transform);
                 cell.transform.localPosition = startingposition;
 
-
+                //randomise the rotation but mainly in the z, only a little in x and y
+                //apply rotation to the cell
+                Vector3 rotn = new Vector3(Random.Range(-5f, 5f), Random.Range(-5f, 5f), Random.Range(-180f, 180f));
+                cell.transform.rotation = Quaternion.Euler(rotn);
 
                 //generate a cell type in proportion to what is desired.
                 float choicefactor = Random.Range(0f, 100f);
-                if (choicefactor > 10f)  //90% will be G, H, I, or J
+                if (choicefactor > 10f)  //90% will be F, H, I, or J
                 {
                     switch (sampleDPDN.value)
                     {
                         case 0:
-                            cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'F';
+                            typetotals[0] += 1;
                             break;
                         case 1:
                             cell.GetComponent<ChemotaxisCell>().cellType = 'H';
+                            typetotals[2] += 1;
                             break;
                         case 2:
                             cell.GetComponent<ChemotaxisCell>().cellType = 'I';
+                            typetotals[3] += 1;
                             break;
                         case 3:
                             cell.GetComponent<ChemotaxisCell>().cellType = 'J';
+                            typetotals[4] += 1;
                             break;
                         default:
-                            cell.GetComponent<ChemotaxisCell>().cellType = 'G';
-                            break;                           
-                    }                   
+                            cell.GetComponent<ChemotaxisCell>().cellType = 'F';
+                            typetotals[0] += 1;
+                            break;
+                    }
                 }
-                else //10% will be F
+                else //10% will be G
                 {
-                    cell.GetComponent<ChemotaxisCell>().cellType = 'F';
+                    cell.GetComponent<ChemotaxisCell>().cellType = 'G';
+                    typetotals[1] += 1;
                 }
-          
+
                 cell.GetComponent<ChemotaxisCell>().SetChemoattractantAffinities();
 
                 cells.Add(cell);
-
             }
 
             // Yield every N iterations to avoid blocking the frame for too long
@@ -172,6 +198,8 @@ public class ChemotaxisManager : MonoBehaviour
                 yield return null; // Yield to the next frame
             }
         }
+
+        Debug.Log("F " + typetotals[0] + ", G " + typetotals[1] + ", H " + typetotals[2] + ", I " + typetotals[3] + ", J " + typetotals[4]);
 
         //end of coroutine
         IsPopulatingWell = false;
@@ -187,7 +215,7 @@ public class ChemotaxisManager : MonoBehaviour
         {
             StopCoroutine(moveCellsCoroutine);
         }
-        
+
         //start the coroutine and keep a referncec to it
         moveCellsCoroutine = StartCoroutine(MoveCells());
 
@@ -205,7 +233,7 @@ public class ChemotaxisManager : MonoBehaviour
             // Move a subset of cells each frame
             for (int i = 0; i < cells.Count; i += cellsPerFrame)
             {
-                
+
                 for (int j = 0; j < cellsPerFrame && (i + j) < cells.Count; j++)
                 {
                     MoveCell(cells[i + j]);
@@ -217,7 +245,9 @@ public class ChemotaxisManager : MonoBehaviour
 
     private void MoveCell(GameObject cell)
     {
-        float basespeed = this.GetComponent<MainTimer>().timedistort/100f;  //take the timedistort and tweak with a magic number
+        float magicspeeddivisor = 20f;
+
+        float basespeed = this.GetComponent<MainTimer>().timedistort / magicspeeddivisor;  //take the timedistort and tweak with a magic number
 
         ChemotaxisCell cellScript = cell.GetComponent<ChemotaxisCell>();
 

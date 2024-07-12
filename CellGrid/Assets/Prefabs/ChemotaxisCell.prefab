@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6faaac86c15c76f4a93ad3211d38d022, type: 2}
+  - {fileID: 2100000, guid: 3ec637be70a11594a87d65816ba3f697, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -110,4 +110,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 191172b247926fd438b11d3dccfcd2bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mobility: 0
+  cellType: 0
+  chemoattractantAffinities: []
