@@ -41,7 +41,7 @@ public class ChemotaxisCell : MonoBehaviour
     float MakeRandFromNormal(float mean)
     {
         float result; //value to return
-        float stdDev = 0.2f;  //since the range is 0 - 1, I've just chosen 0.2 arbitarily
+        float stdDev = mean*0.3f;  //make the standard deviation is about 30% of the mean
         //now for the black magic
         float u1 = Random.Range(0.0f, 1.0f);
         float u2 = Random.Range(0.0f, 1.0f);

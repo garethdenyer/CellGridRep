@@ -199,7 +199,7 @@ public class ChemotaxisManager : MonoBehaviour
             }
         }
 
-        Debug.Log("F " + typetotals[0] + ", G " + typetotals[1] + ", H " + typetotals[2] + ", I " + typetotals[3] + ", J " + typetotals[4]);
+        //Debug.Log("F " + typetotals[0] + ", G " + typetotals[1] + ", H " + typetotals[2] + ", I " + typetotals[3] + ", J " + typetotals[4]);
 
         //end of coroutine
         IsPopulatingWell = false;
@@ -219,7 +219,7 @@ public class ChemotaxisManager : MonoBehaviour
         //start the coroutine and keep a referncec to it
         moveCellsCoroutine = StartCoroutine(MoveCells());
 
-        Debug.Log("Move Cells started on " + cells.Count.ToString() + " cells");
+        //Debug.Log("Move Cells started on " + cells.Count.ToString() + " cells");
         this.GetComponent<MainTimer>().timerIsRunning = true;
         startMoveButton.interactable = false;
         rightWellDPDN.interactable = false;
@@ -265,12 +265,13 @@ public class ChemotaxisManager : MonoBehaviour
                     if (chemindex >= 0 && chemindex < cellScript.chemoattractantAffinities.Count)
                     {
                         float speed = cellScript.GetAffinityToChemoattractant(chemindex) * basespeed;
+                        float randsp = Random.Range(-0.05f, 0.05f);
                         //Debug.Log($"Cell: {cell.name}, Well: {chemwells[w].name}, ChemIndex: {chemindex}, Speed: {speed}");
-
-                        if (speed > 0)
-                        {
+                        speed += (speed * randsp);
+                        //if (speed > 0)
+                        //{
                             cell.transform.position = Vector3.MoveTowards(cell.transform.position, chemwells[w].transform.position, speed * Time.deltaTime);
-                        }
+                        //}
                     }
                     else
                     {
