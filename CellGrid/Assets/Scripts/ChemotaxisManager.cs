@@ -66,21 +66,6 @@ public class ChemotaxisManager : MonoBehaviour
         }
     }
 
-    public void ToggleWellQuads()
-    {
-
-        Renderer quadrenderer = centralWell.GetComponentInChildren<Renderer>();
-        if (quadrenderer.enabled)
-        {
-            quadrenderer.enabled = false;
-        }
-        else
-        {
-            quadrenderer.enabled = true;
-        }
-
-    }
-
     public void StartPopulatingWell()
     {
         spread++;

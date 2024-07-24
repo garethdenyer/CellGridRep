@@ -65,6 +65,12 @@ public class MainTimer : MonoBehaviour
         }
     }
 
+    public void DistortButton(float distortfactor)
+    {
+        timedistort = distortfactor;
+        timeSlider.value = distortfactor;
+    }
+
 
     public void ChangedSliderSetting()
     {

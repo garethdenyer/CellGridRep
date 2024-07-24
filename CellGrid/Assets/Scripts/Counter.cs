@@ -34,14 +34,14 @@ public class Counter : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))
         {
             cellsCounted++;
-            SetUserCounterDigits(cellsCounted);
         }
 
         if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
         {
             cellsCounted--;
-            SetUserCounterDigits(cellsCounted);
         }
+
+            SetUserCounterDigits(cellsCounted);
     }
 
     public void ShowHideManualPanel(string mode)
@@ -67,6 +67,11 @@ public class Counter : MonoBehaviour
         {
             this.GetComponent<CountCells>().ResetUserCounts();
         }    
+    }
+
+    public void ResetCounter()
+    {
+        cellsCounted = 0;
     }
 
     public void ManualChange(string direction)
